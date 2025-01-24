@@ -45,25 +45,26 @@ constexpr u32 CUBE_VERT_COUNT = 36 - 12;
 constexpr u32 CAPS_VERT_COUNT = 6;
 constexpr int TEXTURE_SIZE = 128;
 
-// The quad is split into two bands, each described by two triangles.
-// This is faster than using a single pair of triangles for the entire texture in 32-bit format.
-// By distributing the UV coordinates (especially along the U axis) more evenly,
-// the hardware seems to processes the texture more efficiently.
+/*
+ * The quad is split into two bands, each composed of two triangles.
+ * By distributing the UV coordinates (particularly along the U axis),
+ * the hardware appears to process larger textures more efficiently.
+ */
 Vertex __attribute__((aligned(4))) vertices[QUAD_VERT_COUNT] = {
   // first split
-  { 0.0f, 0.0f, 0xffffffff, 0.0f,   0.0f,   0.0f },
-  { 0.0f, 1.0f, 0xffffffff, 0.0f,   TEXTURE_SIZE, 0.0f },
+  { 0.0f, 0.0f, 0xffffffff, 0.0f,              0.0f,         0.0f },
+  { 0.0f, 1.0f, 0xffffffff, 0.0f,              TEXTURE_SIZE, 0.0f },
   { 0.5f, 1.0f, 0xffffffff, TEXTURE_SIZE*0.5f, TEXTURE_SIZE, 0.0f },
-  { 0.0f, 0.0f, 0xffffffff, 0.0f,   0.0f,   0.0f },
+  { 0.0f, 0.0f, 0xffffffff, 0.0f,              0.0f,         0.0f },
   { 0.5f, 1.0f, 0xffffffff, TEXTURE_SIZE*0.5f, TEXTURE_SIZE, 0.0f },
-  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,   0.0f },
+  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,         0.0f },
   // second split
-  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,   0.0f },
+  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,         0.0f },
   { 0.5f, 1.0f, 0xffffffff, TEXTURE_SIZE*0.5f, TEXTURE_SIZE, 0.0f },
-  { 1.0f, 1.0f, 0xffffffff, TEXTURE_SIZE, TEXTURE_SIZE, 0.0f },
-  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,   0.0f },
-  { 1.0f, 1.0f, 0xffffffff, TEXTURE_SIZE, TEXTURE_SIZE, 0.0f },
-  { 1.0f, 0.0f, 0xffffffff, TEXTURE_SIZE, 0.0f,   0.0f },
+  { 1.0f, 1.0f, 0xffffffff, TEXTURE_SIZE,      TEXTURE_SIZE, 0.0f },
+  { 0.5f, 0.0f, 0xffffffff, TEXTURE_SIZE*0.5f, 0.0f,         0.0f },
+  { 1.0f, 1.0f, 0xffffffff, TEXTURE_SIZE,      TEXTURE_SIZE, 0.0f },
+  { 1.0f, 0.0f, 0xffffffff, TEXTURE_SIZE,      0.0f,         0.0f },
 };
 
 Vertex __attribute__((aligned(4))) cube[CUBE_VERT_COUNT] = {
@@ -181,9 +182,10 @@ int main() {
   SceCtrlData ctl;
   do {
     sceCtrlPeekBufferPositive(&ctl, 1);
+    
     /*
-     * Switch rendering buffer to the multi-texturing rendering area then
-     * render multi-texturing to the multi-texturing rendering area
+     * Switch the rendering buffer to the multi-texturing rendering area,
+     * then render the top corner of the scene defined by the scissor rectangle
      */
     sceGuStart(GU_DIRECT, list);
     sceGuScissor(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
@@ -202,6 +204,7 @@ int main() {
       sceGumMatrixMode(GU_MODEL);
       sceGumLoadIdentity();
       if(i == 1) {
+        // Apply a rotation effect to the second layer composing the multitexture
         static float deg = 0.0f;
         constexpr float rad = 3.14f/180.0f;
         constexpr float disp = TEXTURE_SIZE * 0.5f;
@@ -223,8 +226,8 @@ int main() {
     sceGuSync(GU_SYNC_FINISH, GU_SYNC_WHAT_DONE);
 
     /*
-     * Restore previous rendering/drawing buffer then
-     * render multi-texture effect to the restored drawing buffer
+     * Restore rendering/drawing buffer,
+     * then use the previous rendering as a texture for the cube.
      */
     sceGuStart(GU_DIRECT, list);
     sceGuScissor(0, 0, 480, 272);
@@ -271,10 +274,10 @@ int main() {
   } while(!(ctl.Buttons & PSP_CTRL_HOME));
   
   // Clean and exit
+  sceGuTerm();
   for (int i = 0; i < ntex; i++) {
     free(tex[i]);
   }
-  sceGuTerm();
   sceKernelExitGame();
   return 0;
 }
