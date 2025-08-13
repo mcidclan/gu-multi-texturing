@@ -129,6 +129,7 @@ void guInit() {
   sceGuClearDepth(0.0f);
   sceGuDepthFunc(GU_GEQUAL);
   
+  sceGuTexScale(1.0f, 1.0f);		
   sceGuOffset(2048 - (SCR_WIDTH/2), 2048 - (SCR_HEIGHT/2));
   sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
 
