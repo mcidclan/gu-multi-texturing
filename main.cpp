@@ -40,7 +40,7 @@ struct Vertex {
 
 static unsigned int __attribute__((aligned(4))) list[1024] = {0};
 
-constexpr u32 QUAD_VERT_COUNT = 8*3;
+constexpr u32 QUAD_VERT_COUNT = 12;
 constexpr u32 CUBE_VERT_COUNT = 36 - 12;
 constexpr u32 CAPS_VERT_COUNT = 6;
 constexpr int TEXTURE_SIZE = 128;
